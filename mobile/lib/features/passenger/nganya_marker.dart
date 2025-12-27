@@ -27,6 +27,8 @@ class NganyaMarker extends StatelessWidget {
           ),
           child: Text(
             name,
+            softWrap: false,
+            overflow: TextOverflow.visible,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 10,

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/socket_service.dart';
 import 'nganya_marker.dart';
 import 'ratings_dialog.dart';
+import 'leaderboard_screen.dart';
 
 import '../auth/login_screen.dart';
 
@@ -161,6 +162,16 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
         title: const Text('NganyaRadar'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.leaderboard_outlined),
+            tooltip: 'Leaderboard',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: 'Driver Login',
             onPressed: () {
@@ -185,8 +196,8 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
             markers: _nganyaData.entries.map((entry) {
               return Marker(
                 point: entry.value['location'],
-                width: 80,
-                height: 80,
+                width: 120,
+                height: 100,
                 child: GestureDetector(
                   onTap: () {
                     showDialog(

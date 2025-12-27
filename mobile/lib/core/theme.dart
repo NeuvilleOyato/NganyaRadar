@@ -9,6 +9,11 @@ class AppTheme {
       secondary: const Color(0xFF415A77),
       brightness: Brightness.light,
     ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: Colors.black87),
+      bodyMedium: TextStyle(color: Colors.black87),
+      titleLarge: TextStyle(color: Color(0xFF1B263B)),
+    ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -31,6 +36,11 @@ class AppTheme {
       secondary: const Color(0xFF415A77),
       brightness: Brightness.dark,
       surface: const Color(0xFF0D1B2A),
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: Colors.white),
+      bodyMedium: TextStyle(color: Colors.white70),
+      titleLarge: TextStyle(color: Colors.white),
     ),
     scaffoldBackgroundColor: const Color(0xFF0D1B2A),
     appBarTheme: const AppBarTheme(
@@ -79,6 +89,10 @@ class AppTheme {
         borderSide: const BorderSide(color: Color(0xFF778DA9)),
       ),
       labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+      hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black45),
+      floatingLabelStyle: const TextStyle(color: Color(0xFF778DA9)),
+      suffixIconColor: isDark ? Colors.white70 : Colors.black54,
+      prefixIconColor: isDark ? Colors.white70 : Colors.black54,
     );
   }
 }

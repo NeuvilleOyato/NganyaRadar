@@ -36,4 +36,21 @@ export class RatingsService {
 
         return parseFloat(avg) || 0;
     }
+
+    async getLeaderboard() {
+        return this.reviewRepository
+            .createQueryBuilder('review')
+            .innerJoin('review.nganya', 'nganya')
+            .select([
+                'nganya.id as id',
+                'nganya.name as name',
+                'AVG(review.rating) as avg_rating',
+                'COUNT(review.id) as review_count',
+            ])
+            .groupBy('nganya.id')
+            .addGroupBy('nganya.name')
+            .orderBy('avg_rating', 'DESC')
+            .limit(10)
+            .getRawMany();
+    }
 }

@@ -5,11 +5,14 @@ import { RatingsService } from './ratings.service';
 export class RatingsController {
     constructor(private readonly ratingsService: RatingsService) { }
 
+    @Get('leaderboard')
+    getLeaderboard() {
+        return this.ratingsService.getLeaderboard();
+    }
+
     @Get(':nganyaId')
-    async getReviews(@Param('nganyaId') nganyaId: string) {
-        const reviews = await this.ratingsService.findByNganya(nganyaId);
-        const avg = await this.ratingsService.getAverageRating(nganyaId);
-        return { average_rating: avg, reviews };
+    async getRatings(@Param('nganyaId') nganyaId: string) {
+        return this.ratingsService.findByNganya(nganyaId);
     }
 
     @Post(':nganyaId')
