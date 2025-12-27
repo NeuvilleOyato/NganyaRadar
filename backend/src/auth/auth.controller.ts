@@ -1,0 +1,28 @@
+import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { AuthGuard } from '@nestjs/passport';
+
+@Controller('auth')
+export class AuthController {
+    constructor(private authService: AuthService) { }
+
+    @Post('login')
+    async login(@Body() req: any) {
+        const driver = await this.authService.validateDriver(req.phone_number, req.password);
+        if (!driver) {
+            return { message: 'Invalid credentials' };
+        }
+        return this.authService.login(driver);
+    }
+
+    @Post('register')
+    async register(@Body() req: any) {
+        return this.authService.register(req.phone_number, req.password, req.full_name, req.nganya_name);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get('profile')
+    getProfile(@Request() req: any) {
+        return req.user;
+    }
+}

@@ -1,0 +1,54 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom
+.buildlog
+.history
+.svn
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Visual Studio Code related
+.vscode/
+.history/
+.gemini/
+
+# Flutter specific
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+/build/
+/mobile/build/
+/mobile/.dart_tool/
+/mobile/.packages
+/mobile/.flutter-plugins
+/mobile/.flutter-plugins-dependencies
+/mobile/android/local.properties
+/mobile/android/key.properties
+/mobile/android/**/generated
+/mobile/ios/Flutter/Generated.xcconfig
+/mobile/ios/Flutter/flutter_export_environment.sh
+/mobile/ios/Flutter/App.framework
+/mobile/ios/Flutter/Flutter.framework
+/mobile/ios/Flutter/Generated.podspec
+
+# Node.js specific
+/backend/node_modules/
+/backend/dist/
+/backend/npm-debug.log*
+/backend/yarn-debug.log*
+/backend/yarn-error.log*
+/backend/.env
+/backend/.env.*
+
+# OS generated files
+Thumbs.db
+db.json
