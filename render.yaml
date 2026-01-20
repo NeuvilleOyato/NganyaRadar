@@ -1,0 +1,32 @@
+# Render.com Build Configuration
+# https://render.com/docs/yaml-spec
+
+services:
+  # Web Service (Backend API)
+  - type: web
+    name: nganyaradar-api
+    env: node
+    region: frankfurt  # or singapore for closer to Kenya
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nganyaradar-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 7d
+
+databases:
+  - name: nganyaradar-db
+    databaseName: nganyaradar
+    user: nganyaradar
+    plan: free

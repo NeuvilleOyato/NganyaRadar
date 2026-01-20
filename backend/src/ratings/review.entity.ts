@@ -13,10 +13,22 @@ export class Review {
     @Column()
     nganya_id: string;
 
-    @Column('int')
-    rating: number; // 1-5
+    @Column('float')
+    rating: number; // Overall average
 
-    @Column({ length: 280, nullable: true })
+    @Column('int', { default: 0 })
+    rating_driver: number;
+
+    @Column('int', { default: 0 })
+    rating_music: number;
+
+    @Column('int', { default: 0 })
+    rating_design: number;
+
+    @Column('int', { default: 0 })
+    rating_crew: number;
+
+    @Column({ nullable: true })
     comment: string; // Short comment
 
     @CreateDateColumn()

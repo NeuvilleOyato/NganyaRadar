@@ -24,4 +24,10 @@ export class Driver {
 
     @Column({ default: true })
     is_active: boolean;
+
+    @Column({ nullable: true, select: false })
+    reset_token: string;
+
+    @Column({ type: 'timestamp', nullable: true, select: false })
+    reset_token_expiry: Date;
 }

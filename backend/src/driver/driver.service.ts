@@ -32,7 +32,7 @@ export class DriverService {
     async findByPhoneWithPassword(phone_number: string): Promise<Driver | null> {
         return this.driverRepository.findOne({
             where: { phone_number },
-            select: ['id', 'phone_number', 'password_hash', 'full_name', 'is_active', 'assigned_nganya_id'],
+            select: ['id', 'phone_number', 'password_hash', 'full_name', 'is_active', 'assigned_nganya_id', 'reset_token', 'reset_token_expiry'],
         });
     }
 
@@ -41,9 +41,13 @@ export class DriverService {
         return this.driverRepository.save(driver);
     }
 
-    async update(id: string, data: Partial<Driver>): Promise<Driver> {
-        await this.driverRepository.update(id, data);
-        return this.findOne(id);
+    async update(driverOrId: string | Driver, data?: Partial<Driver>): Promise<Driver> {
+        if (typeof driverOrId === 'string') {
+            await this.driverRepository.update(driverOrId, data!);
+            return this.findOne(driverOrId);
+        } else {
+            return this.driverRepository.save(driverOrId);
+        }
     }
 
     async remove(id: string): Promise<void> {

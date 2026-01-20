@@ -1,4 +1,5 @@
-class AppConstants {
-  static const String apiBaseUrl =
-      'http://192.168.100.157:3000'; // Physical Device Local IP
-}
+// Export the appropriate constants based on environment
+// This file will import either dev or prod constants
+// To build for production: flutter build apk --dart-define=ENVIRONMENT=production
+
+export 'constants_dev.dart' if (dart.library.js) 'constants_prod.dart';

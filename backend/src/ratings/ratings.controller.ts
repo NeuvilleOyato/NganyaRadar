@@ -18,8 +18,11 @@ export class RatingsController {
     @Post(':nganyaId')
     async addReview(
         @Param('nganyaId') nganyaId: string,
-        @Body() body: { rating: number; comment?: string },
+        @Body() body: {
+            ratings: { driver: number; music: number; design: number; crew: number };
+            comment?: string;
+        },
     ) {
-        return this.ratingsService.create(nganyaId, body.rating, body.comment);
+        return this.ratingsService.create(nganyaId, body.ratings, body.comment);
     }
 }

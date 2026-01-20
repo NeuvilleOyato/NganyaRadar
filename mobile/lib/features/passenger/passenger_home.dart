@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/socket_service.dart';
 import 'nganya_marker.dart';
 import 'ratings_dialog.dart';
@@ -26,46 +25,47 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
   // Default to Nairobi CBD
   final LatLng _initialCenter = const LatLng(-1.2921, 36.8219);
 
+  LatLng? _currentLocation;
+
   @override
   void initState() {
     super.initState();
-    _loadCachedLocations();
+    // ghost fix: Do not load old cached locations. Start fresh.
     _initSocket();
+    _getCurrentLocation();
   }
 
-  Future<void> _loadCachedLocations() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? cachedData = prefs.getString('cached_nganya_locations');
-    if (cachedData != null) {
-      try {
-        final Map<String, dynamic> jsonMap = jsonDecode(cachedData);
+  Future<void> _getCurrentLocation() async {
+    final hasPermission = await _handleLocationPermission();
+    if (!hasPermission) return;
+
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      if (mounted) {
         setState(() {
-          jsonMap.forEach((key, value) {
-            final Map<String, dynamic> data = value as Map<String, dynamic>;
-            _nganyaData[key] = {
-              'location': LatLng(data['lat'], data['lng']),
-              'name': data['name'] ?? key.split('-').first.toUpperCase(),
-            };
-          });
+          _currentLocation = LatLng(position.latitude, position.longitude);
         });
-      } catch (e) {
-        debugPrint('Error loading cached locations: $e');
+        _mapController.move(_currentLocation!, 15.0);
       }
+    } catch (e) {
+      debugPrint('Error getting location: $e');
     }
   }
 
-  Future<void> _persistLocations() async {
-    final prefs = await SharedPreferences.getInstance();
-    final Map<String, dynamic> exportMap = {};
-    _nganyaData.forEach((key, value) {
-      final LatLng loc = value['location'];
-      exportMap[key] = {
-        'lat': loc.latitude,
-        'lng': loc.longitude,
-        'name': value['name'],
-      };
-    });
-    await prefs.setString('cached_nganya_locations', jsonEncode(exportMap));
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return false;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return false;
+    }
+    if (permission == LocationPermission.deniedForever) return false;
+    return true;
   }
 
   void _initSocket() {
@@ -82,7 +82,6 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
 
           _nganyaData[nganyaId] = {'location': LatLng(lat, lng), 'name': name};
         });
-        _persistLocations();
       }
     });
 
@@ -95,7 +94,26 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
             _nganyaData.remove(nganyaId);
           }
         });
-        _persistLocations();
+      }
+    });
+
+    // Handle initial list if backend sends it (Optional but good practice)
+    _socketService.socket.on('activeNganyas', (data) {
+      if (mounted && data is List) {
+        setState(() {
+          _nganyaData.clear();
+          for (var item in data) {
+            final nganyaId = item['nganyaId'];
+            final lat = (item['lat'] as num).toDouble();
+            final lng = (item['lng'] as num).toDouble();
+            final name =
+                item['name'] ?? nganyaId.split('-').first.toUpperCase();
+            _nganyaData[nganyaId] = {
+              'location': LatLng(lat, lng),
+              'name': name,
+            };
+          }
+        });
       }
     });
   }
@@ -105,21 +123,44 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Search Nganya'),
+        backgroundColor: const Color(0xFF1B263B), // Match Rating Dialog
+        title: const Text(
+          'Search Nganya',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: searchController,
-          decoration: const InputDecoration(
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
             hintText: 'Enter Nganya Name or ID',
-            prefixIcon: Icon(Icons.search),
+            hintStyle: const TextStyle(color: Colors.white54),
+            prefixIcon: const Icon(Icons.search, color: Colors.white70),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.amber),
+            ),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white70),
+            ),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
+            ),
             onPressed: () {
               final query = searchController.text.toLowerCase();
               final match = _nganyaData.entries.where((entry) {
@@ -193,22 +234,48 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
             userAgentPackageName: 'com.nganyaradar.app',
           ),
           MarkerLayer(
-            markers: _nganyaData.entries.map((entry) {
-              return Marker(
-                point: entry.value['location'],
-                width: 120,
-                height: 100,
-                child: GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => RatingsDialog(nganyaId: entry.key),
-                    );
-                  },
-                  child: NganyaMarker(name: entry.value['name']),
+            markers: [
+              // Passenger Location (Blue Dot)
+              if (_currentLocation != null)
+                Marker(
+                  point: _currentLocation!,
+                  width: 20,
+                  height: 20,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 5,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              );
-            }).toList(),
+              // Nganya Markers
+              ..._nganyaData.entries.map((entry) {
+                return Marker(
+                  point: entry.value['location'],
+                  width: 120,
+                  height: 100,
+                  child: GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => RatingsDialog(
+                          nganyaId: entry.key,
+                          nganyaName: entry.value['name'].toString(),
+                        ),
+                      );
+                    },
+                    child: NganyaMarker(name: entry.value['name']),
+                  ),
+                );
+              }),
+            ],
           ),
         ],
       ),
@@ -224,10 +291,17 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
           const SizedBox(height: 16),
           FloatingActionButton(
             onPressed: () {
-              _mapController.move(_initialCenter, 13.0);
+              if (_currentLocation != null) {
+                _mapController.move(_currentLocation!, 15.0);
+              } else {
+                _mapController.move(_initialCenter, 13.0);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Location not valid yet')),
+                );
+              }
             },
             heroTag: 'locate_fab',
-            tooltip: 'Center Map',
+            tooltip: 'My Location',
             child: const Icon(Icons.my_location),
           ),
         ],

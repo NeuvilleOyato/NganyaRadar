@@ -10,10 +10,21 @@ export class RatingsService {
         private reviewRepository: Repository<Review>,
     ) { }
 
-    async create(nganyaId: string, rating: number, comment?: string): Promise<Review> {
+    async create(
+        nganyaId: string,
+        ratings: { driver: number; music: number; design: number; crew: number },
+        comment?: string,
+    ): Promise<Review> {
+        // Calculate average
+        const avg = (ratings.driver + ratings.music + ratings.design + ratings.crew) / 4;
+
         const review = this.reviewRepository.create({
             nganya_id: nganyaId,
-            rating,
+            rating: avg,
+            rating_driver: ratings.driver,
+            rating_music: ratings.music,
+            rating_design: ratings.design,
+            rating_crew: ratings.crew,
             comment,
         });
         return this.reviewRepository.save(review);
@@ -45,6 +56,10 @@ export class RatingsService {
                 'nganya.id as id',
                 'nganya.name as name',
                 'AVG(review.rating) as avg_rating',
+                'AVG(review.rating_driver) as avg_driver',
+                'AVG(review.rating_music) as avg_music',
+                'AVG(review.rating_design) as avg_design',
+                'AVG(review.rating_crew) as avg_crew',
                 'COUNT(review.id) as review_count',
             ])
             .groupBy('nganya.id')

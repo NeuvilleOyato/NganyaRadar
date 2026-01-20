@@ -52,4 +52,43 @@ export class AuthService {
             assigned_nganya_id: assigned_nganya ? assigned_nganya.id : undefined
         });
     }
+
+    async forgotPassword(phone_number: string) {
+        const driver = await this.driverService.findByPhoneWithPassword(phone_number);
+        if (!driver) return { message: 'If registered, OTP sent.' };
+
+        // Generate 4 digit OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        // Expires in 10 mins
+        const expiry = new Date();
+        expiry.setMinutes(expiry.getMinutes() + 10);
+
+        driver.reset_token = otp;
+        driver.reset_token_expiry = expiry;
+        await this.driverService.update(driver);
+
+        // SIMULATE SMS
+        console.log(`[SMS MOCK] OTP for ${phone_number}: ${otp}`);
+
+        return { message: 'OTP sent to phone number.' };
+    }
+
+    async resetPassword(phone_number: string, otp: string, newPass: string) {
+        const driver = await this.driverService.findByPhoneWithPassword(phone_number);
+        if (!driver || driver.reset_token !== otp) {
+            throw new UnauthorizedException('Invalid OTP');
+        }
+
+        if (new Date() > driver.reset_token_expiry) {
+            throw new UnauthorizedException('OTP expired');
+        }
+
+        const hashedPassword = await bcrypt.hash(newPass, 10);
+        driver.password_hash = hashedPassword;
+        driver.reset_token = null as any;
+        driver.reset_token_expiry = null as any;
+        await this.driverService.update(driver);
+
+        return { message: 'Password reset successfully.' };
+    }
 }

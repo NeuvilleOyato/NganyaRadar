@@ -76,6 +76,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: GlassContainer(
                       child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         leading: CircleAvatar(
                           backgroundColor: Colors.amber,
                           child: Text(
@@ -93,25 +97,54 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        subtitle: Text(
-                          '${item['review_count']} reviews',
-                          style: const TextStyle(color: Colors.white70),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${item['review_count']} reviews',
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width - 160,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildSmallStat(
+                                    Icons.drive_eta,
+                                    item['avg_driver'],
+                                  ),
+                                  _buildSmallStat(
+                                    Icons.music_note,
+                                    item['avg_music'],
+                                  ),
+                                  _buildSmallStat(
+                                    Icons.brush,
+                                    item['avg_design'],
+                                  ),
+                                  _buildSmallStat(
+                                    Icons.groups,
+                                    item['avg_crew'],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(
                               Icons.star,
                               color: Colors.amber,
                               size: 20,
                             ),
-                            const SizedBox(width: 4),
                             Text(
                               avgRating.toStringAsFixed(1),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                                fontSize: 16,
                               ),
                             ),
                           ],
@@ -121,6 +154,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   );
                 },
               ),
+      ),
+    );
+  }
+
+  Widget _buildSmallStat(IconData icon, dynamic value) {
+    // Value might be string or number from JSON
+    final double val = value != null ? double.parse(value.toString()) : 0.0;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white60, size: 14),
+          const SizedBox(width: 2),
+          Text(
+            val.toStringAsFixed(1),
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          ),
+        ],
       ),
     );
   }
